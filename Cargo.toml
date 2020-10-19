@@ -20,6 +20,7 @@ byteorder = { version = "1.0", default-features = false }
 log = { version = "0.4.4", default-features = false, optional = true }
 libc = { version = "0.2.18", optional = true }
 bitflags = { version = "1.0", default-features = false }
+defmt = "0.1.0"
 
 [dev-dependencies]
 env_logger = "0.5"
