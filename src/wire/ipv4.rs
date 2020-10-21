@@ -112,6 +112,13 @@ impl fmt::Display for Address {
     }
 }
 
+#[cfg(feature = "defmt")]
+impl defmt::Format for Address {
+    fn format(&self, f: &mut defmt::Formatter) {
+        defmt::write!(f, "{:u8}.{:u8}.{:u8}.{:u8}", self.0[0], self.0[1], self.0[2], self.0[3])
+    }
+}
+
 /// A specification of an IPv4 CIDR block, containing an address and a variable-length
 /// subnet masking prefix length.
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Default)]
@@ -221,6 +228,13 @@ impl Cidr {
 impl fmt::Display for Cidr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}/{}", self.address, self.prefix_len)
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Cidr {
+    fn format(&self, f: &mut defmt::Formatter) {
+        defmt::write!(f, "{:?}/{:u8}", self.address, self.prefix_len);
     }
 }
 
@@ -548,6 +562,7 @@ impl<T: AsRef<[u8]>> AsRef<[u8]> for Packet<T> {
 
 /// A high-level representation of an Internet Protocol version 4 packet header.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Repr {
     pub src_addr:    Address,
     pub dst_addr:    Address,

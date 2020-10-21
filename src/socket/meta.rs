@@ -66,12 +66,12 @@ impl Meta {
                 true,
             NeighborState::Waiting { neighbor, silent_until } => {
                 if has_neighbor(neighbor) {
-                    net_trace!("{}: neighbor {} discovered, unsilencing",
+                    net_trace!("{:?}: neighbor {:?} discovered, unsilencing",
                                self.handle, neighbor);
                     self.neighbor_state = NeighborState::Active;
                     true
                 } else if timestamp >= silent_until {
-                    net_trace!("{}: neighbor {} silence timer expired, rediscovering", self.handle, neighbor);
+                    net_trace!("{:?}: neighbor {:?} silence timer expired, rediscovering", self.handle, neighbor);
                     true
                 } else {
                     false
@@ -81,7 +81,7 @@ impl Meta {
     }
 
     pub(crate) fn neighbor_missing(&mut self, timestamp: Instant, neighbor: IpAddress) {
-        net_trace!("{}: neighbor {} missing, silencing until t+{}",
+        net_trace!("{:?}: neighbor {:?} missing, silencing until t+{:?}",
                    self.handle, neighbor, Self::DISCOVERY_SILENT_TIME);
         self.neighbor_state = NeighborState::Waiting {
             neighbor, silent_until: timestamp + Self::DISCOVERY_SILENT_TIME

@@ -11,11 +11,12 @@ use crate::wire::ip::checksum;
 /// A sequence number is a monotonically advancing integer modulo 2<sup>32</sup>.
 /// Sequence numbers do not have a discontiguity when compared pairwise across a signed overflow.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct SeqNumber(pub i32);
 
 impl fmt::Display for SeqNumber {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0 as u32)
+        write!(f, "{:?}", self.0 as u32)
     }
 }
 
@@ -702,6 +703,7 @@ impl<'a> TcpOption<'a> {
 
 /// The possible control flags of a Transmission Control Protocol packet.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Control {
     None,
     Psh,
@@ -731,6 +733,7 @@ impl Control {
 
 /// A high-level representation of a Transmission Control Protocol packet.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Repr<'a> {
     pub src_port:     u16,
     pub dst_port:     u16,
@@ -795,7 +798,7 @@ impl<'a> Repr<'a> {
                     // value exceeding 14, the TCP should log the error but use 14 instead of the
                     // specified value.
                     window_scale = if value > 14 {
-                        net_debug!("{}:{}:{}:{}: parsed window scaling factor >14, setting to 14", src_addr, packet.src_port(), dst_addr, packet.dst_port());
+                        net_debug!("{:?}:{:?}:{:?}:{:?}: parsed window scaling factor >14, setting to 14", src_addr, packet.src_port(), dst_addr, packet.dst_port());
                         Some(14)
                     } else {
                         Some(value)
@@ -932,7 +935,7 @@ impl<'a> Repr<'a> {
 impl<'a, T: AsRef<[u8]> + ?Sized> fmt::Display for Packet<&'a T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Cannot use Repr::parse because we don't have the IP addresses.
-        write!(f, "TCP src={} dst={}",
+        write!(f, "TCP src={:?} dst={:?}",
                self.src_port(), self.dst_port())?;
         if self.syn() { write!(f, " syn")? }
         if self.fin() { write!(f, " fin")? }
@@ -941,36 +944,36 @@ impl<'a, T: AsRef<[u8]> + ?Sized> fmt::Display for Packet<&'a T> {
         if self.ece() { write!(f, " ece")? }
         if self.cwr() { write!(f, " cwr")? }
         if self.ns()  { write!(f, " ns" )? }
-        write!(f, " seq={}", self.seq_number())?;
+        write!(f, " seq={:?}", self.seq_number())?;
         if self.ack() {
-            write!(f, " ack={}", self.ack_number())?;
+            write!(f, " ack={:?}", self.ack_number())?;
         }
-        write!(f, " win={}", self.window_len())?;
+        write!(f, " win={:?}", self.window_len())?;
         if self.urg() {
-            write!(f, " urg={}", self.urgent_at())?;
+            write!(f, " urg={:?}", self.urgent_at())?;
         }
-        write!(f, " len={}", self.payload().len())?;
+        write!(f, " len={:?}", self.payload().len())?;
 
         let mut options = self.options();
         while !options.is_empty() {
             let (next_options, option) =
                 match TcpOption::parse(options) {
                     Ok(res) => res,
-                    Err(err) => return write!(f, " ({})", err)
+                    Err(err) => return write!(f, " ({:?})", err)
                 };
             match option {
                 TcpOption::EndOfList => break,
                 TcpOption::NoOperation => (),
                 TcpOption::MaxSegmentSize(value) =>
-                    write!(f, " mss={}", value)?,
+                    write!(f, " mss={:?}", value)?,
                 TcpOption::WindowScale(value) =>
-                    write!(f, " ws={}", value)?,
+                    write!(f, " ws={:?}", value)?,
                 TcpOption::SackPermitted =>
                     write!(f, " sACK")?,
                 TcpOption::SackRange(slice) =>
                     write!(f, " sACKr{:?}", slice)?, // debug print conveniently includes the []s
                 TcpOption::Unknown { kind, .. } =>
-                    write!(f, " opt({})", kind)?,
+                    write!(f, " opt({:?})", kind)?,
             }
             options = next_options;
         }
@@ -980,7 +983,7 @@ impl<'a, T: AsRef<[u8]> + ?Sized> fmt::Display for Packet<&'a T> {
 
 impl<'a> fmt::Display for Repr<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TCP src={} dst={}",
+        write!(f, "TCP src={:?} dst={:?}",
                self.src_port, self.dst_port)?;
         match self.control {
             Control::Syn => write!(f, " syn")?,
@@ -989,14 +992,14 @@ impl<'a> fmt::Display for Repr<'a> {
             Control::Psh => write!(f, " psh")?,
             Control::None => ()
         }
-        write!(f, " seq={}", self.seq_number)?;
+        write!(f, " seq={:?}", self.seq_number)?;
         if let Some(ack_number) = self.ack_number {
-            write!(f, " ack={}", ack_number)?;
+            write!(f, " ack={:?}", ack_number)?;
         }
-        write!(f, " win={}", self.window_len)?;
-        write!(f, " len={}", self.payload.len())?;
+        write!(f, " win={:?}", self.window_len)?;
+        write!(f, " len={:?}", self.payload.len())?;
         if let Some(max_seg_size) = self.max_seg_size {
-            write!(f, " mss={}", max_seg_size)?;
+            write!(f, " mss={:?}", max_seg_size)?;
         }
         Ok(())
     }

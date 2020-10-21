@@ -608,7 +608,8 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                     #[cfg(feature = "medium-ethernet")]
                     Medium::Ethernet => {
                         inner.process_ethernet(sockets, timestamp, &frame).map_err(|err| {
-                            net_debug!("cannot process ingress packet: {}", err);
+                            net_debug!("cannot process ingress packet: {:?}", err);
+                            #[cfg(not(feature = "defmt"))]
                             net_debug!("packet dump follows:\n{}",
                                     PrettyPrinter::<EthernetFrame<&[u8]>>::new("", &frame));
                             err
@@ -617,7 +618,7 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                             match response {
                                 Some(packet) => {
                                     inner.dispatch(tx_token, timestamp, packet).map_err(|err| {
-                                        net_debug!("cannot dispatch response packet: {}", err);
+                                        net_debug!("cannot dispatch response packet: {:?}", err);
                                         err
                                     })
                                 }
@@ -628,7 +629,7 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                     #[cfg(feature = "medium-ip")]
                     Medium::Ip => {
                         inner.process_ip(sockets, timestamp, &frame).map_err(|err| {
-                            net_debug!("cannot process ingress packet: {}", err);
+                            net_debug!("cannot process ingress packet: {:?}", err);
                             //net_debug!("packet dump follows:\n{}",
                             //        PrettyPrinter::<IpFrame<&[u8]>>::new("", &frame));
                             err
@@ -637,7 +638,7 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                             match response {
                                 Some(packet) => {
                                     inner.dispatch_ip(tx_token, timestamp, packet).map_err(|err| {
-                                        net_debug!("cannot dispatch response packet: {}", err);
+                                        net_debug!("cannot dispatch response packet: {:?}", err);
                                         err
                                     })
                                 }
@@ -725,7 +726,7 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                     break
                 }
                 (Err(err), _) | (_, Err(err)) => {
-                    net_debug!("{}: cannot dispatch egress packet: {}",
+                    net_debug!("{:?}: cannot dispatch egress packet: {:?}",
                                socket.meta().handle, err);
                     return Err(err)
                 }
@@ -788,14 +789,14 @@ impl<'b, 'c, 'e> InterfaceInner<'b, 'c, 'e> {
     #[cfg(feature = "medium-ethernet")]
     fn check_ethernet_addr(addr: &EthernetAddress) {
         if addr.is_multicast() {
-            panic!("Ethernet address {} is not unicast", addr)
+            panic!("Ethernet address {:?} is not unicast", addr)
         }
     }
 
     fn check_ip_addrs(addrs: &[IpCidr]) {
         for cidr in addrs {
             if !cidr.address().is_unicast() && !cidr.address().is_unspecified() {
-                panic!("IP address {} is not unicast", cidr.address())
+                panic!("IP address {:?} is not unicast", cidr.address())
             }
         }
     }
@@ -1640,7 +1641,7 @@ impl<'b, 'c, 'e> InterfaceInner<'b, 'c, 'e> {
         match (src_addr, dst_addr) {
             #[cfg(feature = "proto-ipv4")]
             (&IpAddress::Ipv4(src_addr), IpAddress::Ipv4(dst_addr)) => {
-                net_debug!("address {} not in neighbor cache, sending ARP request",
+                net_debug!("address {:?} not in neighbor cache, sending ARP request",
                            dst_addr);
 
                 let arp_repr = ArpRepr::EthernetIpv4 {
@@ -1661,7 +1662,7 @@ impl<'b, 'c, 'e> InterfaceInner<'b, 'c, 'e> {
 
             #[cfg(feature = "proto-ipv6")]
             (&IpAddress::Ipv6(src_addr), IpAddress::Ipv6(dst_addr)) => {
-                net_debug!("address {} not in neighbor cache, sending Neighbor Solicitation",
+                net_debug!("address {:?} not in neighbor cache, sending Neighbor Solicitation",
                            dst_addr);
 
                 let solicit = Icmpv6Repr::Ndisc(NdiscRepr::NeighborSolicit {

@@ -23,6 +23,7 @@ const PARAMETER_REQUEST_LIST: &[u8] = &[
 
 /// IPv4 configuration data returned by `client.poll()`
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Config {
     pub address: Option<Ipv4Cidr>,
     pub router: Option<Ipv4Address>,
@@ -30,6 +31,7 @@ pub struct Config {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 struct RequestState {
     retry: u16,
     endpoint_ip: Ipv4Address,
@@ -38,6 +40,7 @@ struct RequestState {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 struct RenewState {
     retry: u16,
     endpoint_ip: Ipv4Address,
@@ -45,6 +48,7 @@ struct RenewState {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 enum ClientState {
     /// Discovering the DHCP server
     Discovering,
@@ -178,14 +182,14 @@ impl Client {
         let dhcp_packet = match DhcpPacket::new_checked(data) {
             Ok(dhcp_packet) => dhcp_packet,
             Err(e) => {
-                net_debug!("DHCP invalid pkt from {}: {:?}", src_ip, e);
+                net_debug!("DHCP invalid pkt from {:?}: {:?}", src_ip, e);
                 return None;
             }
         };
         let dhcp_repr = match DhcpRepr::parse(&dhcp_packet) {
             Ok(dhcp_repr) => dhcp_repr,
             Err(e) => {
-                net_debug!("DHCP error parsing pkt from {}: {:?}", src_ip, e);
+                net_debug!("DHCP error parsing pkt from {:?}: {:?}", src_ip, e);
                 return None;
             }
         };
@@ -196,7 +200,7 @@ impl Client {
             Some(server_identifier) => server_identifier,
             None => return None,
         };
-        net_debug!("DHCP recv {:?} from {} ({})", dhcp_repr.message_type, src_ip, server_identifier);
+        net_debug!("DHCP recv {:?} from {:?} ({:?})", dhcp_repr.message_type, src_ip, server_identifier);
 
         // once we receive the ack, we can pass the config to the user
         let config = if dhcp_repr.message_type == DhcpMessageType::Ack {
@@ -310,7 +314,7 @@ impl Client {
                     addr: Ipv4Address::BROADCAST.into(),
                     port: UDP_SERVER_PORT,
                 };
-                net_trace!("DHCP send discover to {}: {:?}", endpoint, dhcp_repr);
+                net_trace!("DHCP send discover to {:?}: {:?}", endpoint, dhcp_repr);
                 send_packet(iface, endpoint, dhcp_repr)
             }
             ClientState::Requesting(ref mut r_state) => {
@@ -326,7 +330,7 @@ impl Client {
                 dhcp_repr.requested_ip = Some(r_state.requested_ip);
                 dhcp_repr.server_identifier = Some(r_state.server_identifier);
                 dhcp_repr.parameter_request_list = Some(PARAMETER_REQUEST_LIST);
-                net_trace!("DHCP send request to {} = {:?}", endpoint, dhcp_repr);
+                net_trace!("DHCP send request to {:?} = {:?}", endpoint, dhcp_repr);
                 send_packet(iface, endpoint, dhcp_repr)
             }
             ClientState::Renew(ref mut p_state) => {
@@ -341,7 +345,7 @@ impl Client {
                 dhcp_repr.message_type = DhcpMessageType::Request;
                 dhcp_repr.client_ip = client_ip;
                 dhcp_repr.broadcast = false;
-                net_trace!("DHCP send renew to {}: {:?}", endpoint, dhcp_repr);
+                net_trace!("DHCP send renew to {:?}: {:?}", endpoint, dhcp_repr);
                 send_packet(iface, endpoint, dhcp_repr)
             }
         }

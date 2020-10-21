@@ -17,11 +17,12 @@ pub struct Item<'a, 'b: 'a> {
 
 /// A handle, identifying a socket in a set.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Handle(usize);
 
 impl fmt::Display for Handle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "#{}", self.0)
+        write!(f, "#{:?}", self.0)
     }
 }
 
@@ -50,7 +51,7 @@ impl<'a, 'b: 'a, 'c: 'a + 'b> Set<'a, 'b, 'c> {
     {
         fn put<'b, 'c>(index: usize, slot: &mut Option<Item<'b, 'c>>,
                        mut socket: Socket<'b, 'c>) -> Handle {
-            net_trace!("[{}]: adding", index);
+            net_trace!("[{:?}]: adding", index);
             let handle = Handle(index);
             socket.meta_mut().handle = handle;
             *slot = Some(Item { socket, refs: 1 });
@@ -98,7 +99,7 @@ impl<'a, 'b: 'a, 'c: 'a + 'b> Set<'a, 'b, 'c> {
     /// # Panics
     /// This function may panic if the handle does not belong to this socket set.
     pub fn remove(&mut self, handle: Handle) -> Socket<'b, 'c> {
-        net_trace!("[{}]: removing", handle.0);
+        net_trace!("[{:?}]: removing", handle.0);
         match self.sockets[handle.0].take() {
             Some(item) => item.socket,
             None => panic!("handle does not refer to a valid socket")
@@ -159,7 +160,7 @@ impl<'a, 'b: 'a, 'c: 'a + 'b> Set<'a, 'b, 'c> {
                 }
             }
             if may_remove {
-                net_trace!("[{}]: pruning", index);
+                net_trace!("[{:?}]: pruning", index);
                 *item = None
             }
         }

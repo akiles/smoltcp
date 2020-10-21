@@ -615,6 +615,7 @@ impl<'a, T: AsRef<[u8]> + AsMut<[u8]> + ?Sized> Packet<&'a mut T> {
 ///
 /// The `options` field has a variable length.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Repr<'a> {
     /// This field is also known as `op` in the RFC. It indicates the type of DHCP message this
     /// packet represents.

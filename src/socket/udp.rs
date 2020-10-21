@@ -201,7 +201,7 @@ impl<'a, 'b> UdpSocket<'a, 'b> {
 
         let payload_buf = self.tx_buffer.enqueue(size, endpoint)?;
 
-        net_trace!("{}:{}:{}: buffer to send {} octets",
+        net_trace!("{:?}:{:?}:{:?}: buffer to send {:?} octets",
                    self.meta.handle, self.endpoint, endpoint, size);
         Ok(payload_buf)
     }
@@ -221,7 +221,7 @@ impl<'a, 'b> UdpSocket<'a, 'b> {
     pub fn recv(&mut self) -> Result<(&[u8], IpEndpoint)> {
         let (endpoint, payload_buf) = self.rx_buffer.dequeue()?;
 
-        net_trace!("{}:{}:{}: receive {} buffered octets",
+        net_trace!("{:?}:{:?}:{:?}: receive {:?} buffered octets",
                    self.meta.handle, self.endpoint,
                    endpoint, payload_buf.len());
         Ok((payload_buf, endpoint))
@@ -247,7 +247,7 @@ impl<'a, 'b> UdpSocket<'a, 'b> {
         let handle = self.meta.handle;
         let endpoint = self.endpoint;
         self.rx_buffer.peek().map(|(remote_endpoint, payload_buf)| {
-            net_trace!("{}:{}:{}: peek {} buffered octets",
+            net_trace!("{:?}:{:?}:{:?}: peek {:?} buffered octets",
                        handle, endpoint,
                        remote_endpoint, payload_buf.len());
            (payload_buf, remote_endpoint)
@@ -285,7 +285,7 @@ impl<'a, 'b> UdpSocket<'a, 'b> {
         let endpoint = IpEndpoint { addr: ip_repr.src_addr(), port: repr.src_port };
         self.rx_buffer.enqueue(size, endpoint)?.copy_from_slice(repr.payload);
 
-        net_trace!("{}:{}:{}: receiving {} octets",
+        net_trace!("{:?}:{:?}:{:?}: receiving {:?} octets",
                    self.meta.handle, self.endpoint,
                    endpoint, size);
 
@@ -302,7 +302,7 @@ impl<'a, 'b> UdpSocket<'a, 'b> {
         let hop_limit = self.hop_limit.unwrap_or(64);
 
         self.tx_buffer.dequeue_with(|remote_endpoint, payload_buf| {
-            net_trace!("{}:{}:{}: sending {} octets",
+            net_trace!("{:?}:{:?}:{:?}: sending {:?} octets",
                         handle, endpoint,
                         endpoint, payload_buf.len());
 

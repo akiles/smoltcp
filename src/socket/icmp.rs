@@ -286,7 +286,7 @@ impl<'a, 'b> IcmpSocket<'a, 'b> {
 
         let packet_buf = self.tx_buffer.enqueue(size, endpoint)?;
 
-        net_trace!("{}:{}: buffer to send {} octets",
+        net_trace!("{:?}:{:?}: buffer to send {:?} octets",
                    self.meta.handle, endpoint, size);
         Ok(packet_buf)
     }
@@ -307,7 +307,7 @@ impl<'a, 'b> IcmpSocket<'a, 'b> {
     pub fn recv(&mut self) -> Result<(&[u8], IpAddress)> {
         let (endpoint, packet_buf) = self.rx_buffer.dequeue()?;
 
-        net_trace!("{}:{}: receive {} buffered octets",
+        net_trace!("{:?}:{:?}: receive {:?} buffered octets",
                    self.meta.handle, endpoint, packet_buf.len());
         Ok((packet_buf, endpoint))
     }
@@ -378,7 +378,7 @@ impl<'a, 'b> IcmpSocket<'a, 'b> {
                 icmp_repr.emit(&mut Icmpv4Packet::new_unchecked(packet_buf),
                                &ChecksumCapabilities::default());
 
-                net_trace!("{}:{}: receiving {} octets",
+                net_trace!("{:?}:{:?}: receiving {:?} octets",
                            self.meta.handle, icmp_repr.buffer_len(), packet_buf.len());
             },
             #[cfg(feature = "proto-ipv6")]
@@ -389,7 +389,7 @@ impl<'a, 'b> IcmpSocket<'a, 'b> {
                                &mut Icmpv6Packet::new_unchecked(packet_buf),
                                &ChecksumCapabilities::default());
 
-                net_trace!("{}:{}: receiving {} octets",
+                net_trace!("{:?}:{:?}: receiving {:?} octets",
                            self.meta.handle, icmp_repr.buffer_len(), packet_buf.len());
             },
         }
@@ -406,7 +406,7 @@ impl<'a, 'b> IcmpSocket<'a, 'b> {
         let handle    = self.meta.handle;
         let hop_limit = self.hop_limit.unwrap_or(64);
         self.tx_buffer.dequeue_with(|remote_endpoint, packet_buf| {
-            net_trace!("{}:{}: sending {} octets",
+            net_trace!("{:?}:{:?}: sending {:?} octets",
                        handle, remote_endpoint, packet_buf.len());
             match *remote_endpoint {
                 #[cfg(feature = "proto-ipv4")]

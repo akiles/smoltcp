@@ -121,12 +121,12 @@ impl<'a> Cache<'a> {
         match self.storage.insert(protocol_addr, neighbor) {
             Ok(Some(old_neighbor)) => {
                 if old_neighbor.hardware_addr != hardware_addr {
-                    net_trace!("replaced {} => {} (was {})",
+                    net_trace!("replaced {:?} => {:?} (was {:?})",
                                protocol_addr, hardware_addr, old_neighbor.hardware_addr);
                 }
             }
             Ok(None) => {
-                net_trace!("filled {} => {} (was empty)", protocol_addr, hardware_addr);
+                net_trace!("filled {:?} => {:?} (was empty)", protocol_addr, hardware_addr);
             }
             Err((protocol_addr, neighbor)) => {
                 // If we're going down this branch, it means that a fixed-size cache storage
@@ -152,7 +152,7 @@ impl<'a> Cache<'a> {
                     self.storage.remove(&old_protocol_addr).unwrap();
                 match self.storage.insert(protocol_addr, neighbor) {
                     Ok(None) => {
-                        net_trace!("filled {} => {} (evicted {} => {})",
+                        net_trace!("filled {:?} => {:?} (evicted {:?} => {:?})",
                                    protocol_addr, hardware_addr,
                                    old_protocol_addr, _old_neighbor.hardware_addr);
                     }

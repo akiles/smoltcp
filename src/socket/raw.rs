@@ -160,7 +160,7 @@ impl<'a, 'b> RawSocket<'a, 'b> {
     pub fn send(&mut self, size: usize) -> Result<&mut [u8]> {
         let packet_buf = self.tx_buffer.enqueue(size, ())?;
 
-        net_trace!("{}:{}:{}: buffer to send {} octets",
+        net_trace!("{:?}:{:?}:{:?}: buffer to send {:?} octets",
                    self.meta.handle, self.ip_version, self.ip_protocol,
                    packet_buf.len());
         Ok(packet_buf)
@@ -183,7 +183,7 @@ impl<'a, 'b> RawSocket<'a, 'b> {
     pub fn recv(&mut self) -> Result<&[u8]> {
         let ((), packet_buf) = self.rx_buffer.dequeue()?;
 
-        net_trace!("{}:{}:{}: receive {} buffered octets",
+        net_trace!("{:?}:{:?}:{:?}: receive {:?} buffered octets",
                    self.meta.handle, self.ip_version, self.ip_protocol,
                    packet_buf.len());
         Ok(packet_buf)
@@ -216,7 +216,7 @@ impl<'a, 'b> RawSocket<'a, 'b> {
         ip_repr.emit(&mut packet_buf[..header_len], &checksum_caps);
         packet_buf[header_len..].copy_from_slice(payload);
 
-        net_trace!("{}:{}:{}: receiving {} octets",
+        net_trace!("{:?}:{:?}:{:?}: receiving {:?} octets",
                    self.meta.handle, self.ip_version, self.ip_protocol,
                    packet_buf.len());
 
@@ -267,13 +267,13 @@ impl<'a, 'b> RawSocket<'a, 'b> {
         self.tx_buffer.dequeue_with(|&mut (), packet_buf| {
             match prepare(ip_protocol, packet_buf, &checksum_caps) {
                 Ok((ip_repr, raw_packet)) => {
-                    net_trace!("{}:{}:{}: sending {} octets",
+                    net_trace!("{:?}:{:?}:{:?}: sending {:?} octets",
                                handle, ip_version, ip_protocol,
                                ip_repr.buffer_len() + raw_packet.len());
                     emit((ip_repr, raw_packet))
                 }
                 Err(error) => {
-                    net_debug!("{}:{}:{}: dropping outgoing packet ({})",
+                    net_debug!("{:?}:{:?}:{:?}: dropping outgoing packet ({:?})",
                                handle, ip_version, ip_protocol,
                                error);
                     // Return Ok(()) so the packet is dequeued.
