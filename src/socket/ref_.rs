@@ -8,6 +8,8 @@ use socket::IcmpSocket;
 use socket::UdpSocket;
 #[cfg(feature = "socket-tcp")]
 use socket::TcpSocket;
+#[cfg(feature = "socket-dns")]
+use socket::DnsSocket;
 
 /// A trait for tracking a socket usage session.
 ///
@@ -27,6 +29,8 @@ impl<'a, 'b> Session for IcmpSocket<'a, 'b> {}
 impl<'a, 'b> Session for UdpSocket<'a, 'b> {}
 #[cfg(feature = "socket-tcp")]
 impl<'a> Session for TcpSocket<'a> {}
+#[cfg(feature = "socket-dns")]
+impl<'a> Session for DnsSocket<'a> {}
 
 /// A smart pointer to a socket.
 ///

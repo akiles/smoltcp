@@ -157,6 +157,9 @@ impl<'a, 'b: 'a, 'c: 'a + 'b> Set<'a, 'b, 'c> {
                         } else {
                             socket.close()
                         },
+                    #[cfg(feature = "socket-dns")]
+                    &mut Socket::Dns(_) =>
+                        may_remove = true,
                     &mut Socket::__Nonexhaustive(_) => unreachable!()
                 }
             }
