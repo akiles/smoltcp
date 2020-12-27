@@ -652,13 +652,7 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
     }
 
     fn socket_egress(&mut self, sockets: &mut SocketSet, timestamp: Instant) -> Result<bool> {
-        let mut caps = self.device.capabilities();
-        caps.max_transmission_unit = match caps.medium {
-            #[cfg(feature = "medium-ethernet")]
-            Medium::Ethernet => caps.max_transmission_unit - EthernetFrame::<&[u8]>::header_len(),
-            #[cfg(feature = "medium-ip")]
-            Medium::Ip => caps.max_transmission_unit,
-        };
+        let _caps = self.device.capabilities();
 
         let mut emitted_any = false;
         for mut socket in sockets.iter_mut() {
@@ -685,11 +679,11 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                 match *socket {
                     #[cfg(feature = "socket-raw")]
                     Socket::Raw(ref mut socket) =>
-                        socket.dispatch(&caps.checksum, |response|
+                        socket.dispatch(&_caps.checksum, |response|
                             respond!(IpPacket::Raw(response))),
                     #[cfg(all(feature = "socket-icmp", any(feature = "proto-ipv4", feature = "proto-ipv6")))]
                     Socket::Icmp(ref mut socket) =>
-                        socket.dispatch(&caps, |response| {
+                        socket.dispatch(|response| {
                             match response {
                                 #[cfg(feature = "proto-ipv4")]
                                 (IpRepr::Ipv4(ipv4_repr), IcmpRepr::Ipv4(icmpv4_repr)) =>
@@ -705,9 +699,16 @@ impl<'b, 'c, 'e, DeviceT> Interface<'b, 'c, 'e, DeviceT>
                         socket.dispatch(|response|
                             respond!(IpPacket::Udp(response))),
                     #[cfg(feature = "socket-tcp")]
-                    Socket::Tcp(ref mut socket) =>
-                        socket.dispatch(timestamp, &caps, |response|
-                            respond!(IpPacket::Tcp(response))),
+                    Socket::Tcp(ref mut socket) => {
+                        let ip_mtu = match _caps.medium {
+                            #[cfg(feature = "medium-ethernet")]
+                            Medium::Ethernet => _caps.max_transmission_unit - EthernetFrame::<&[u8]>::header_len(),
+                            #[cfg(feature = "medium-ip")]
+                            Medium::Ip => _caps.max_transmission_unit,
+                        };
+                        socket.dispatch(timestamp, ip_mtu, |response|
+                            respond!(IpPacket::Tcp(response)))
+                    }
                     Socket::__Nonexhaustive(_) => unreachable!()
                 };
 
