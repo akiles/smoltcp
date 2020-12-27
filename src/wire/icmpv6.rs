@@ -6,7 +6,7 @@ use crate::phy::ChecksumCapabilities;
 use crate::wire::ip::checksum;
 use crate::wire::{IpAddress, IpProtocol, Ipv6Packet, Ipv6Repr};
 use crate::wire::MldRepr;
-#[cfg(feature = "ethernet")]
+#[cfg(feature = "medium-ethernet")]
 use crate::wire::NdiscRepr;
 
 enum_with_unknown! {
@@ -535,7 +535,7 @@ pub enum Repr<'a> {
         seq_no: u16,
         data:   &'a [u8]
     },
-    #[cfg(feature = "ethernet")]
+    #[cfg(feature = "medium-ethernet")]
     Ndisc(NdiscRepr<'a>),
     Mld(MldRepr<'a>),
     #[doc(hidden)]
@@ -618,7 +618,7 @@ impl<'a> Repr<'a> {
                     data:   packet.payload()
                 })
             },
-            #[cfg(feature = "ethernet")]
+            #[cfg(feature = "medium-ethernet")]
             (msg_type, 0) if msg_type.is_ndisc() => {
                 NdiscRepr::parse(packet).map(Repr::Ndisc)
             },
@@ -640,7 +640,7 @@ impl<'a> Repr<'a> {
             &Repr::EchoReply { data, .. } => {
                 field::ECHO_SEQNO.end + data.len()
             },
-            #[cfg(feature = "ethernet")]
+            #[cfg(feature = "medium-ethernet")]
             &Repr::Ndisc(ndisc) => {
                 ndisc.buffer_len()
             },
@@ -712,7 +712,7 @@ impl<'a> Repr<'a> {
                 packet.payload_mut()[..data_len].copy_from_slice(&data[..data_len])
             },
 
-            #[cfg(feature = "ethernet")]
+            #[cfg(feature = "medium-ethernet")]
             Repr::Ndisc(ndisc) => {
                 ndisc.emit(packet)
             },
