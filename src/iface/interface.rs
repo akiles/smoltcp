@@ -591,6 +591,7 @@ impl<'a, DeviceT> Interface<'a, DeviceT>
                     Medium::Ethernet => {
                         inner.process_ethernet(sockets, timestamp, &frame).map_err(|err| {
                             net_debug!("cannot process ingress packet: {}", err);
+                            #[cfg(not(feature = "defmt"))]
                             net_debug!("packet dump follows:\n{}",
                                     PrettyPrinter::<EthernetFrame<&[u8]>>::new("", &frame));
                             err

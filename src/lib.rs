@@ -115,6 +115,7 @@ pub mod dhcp;
 /// The error type for the networking stack.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Error {
     /// An operation cannot proceed because a buffer is empty or full.
     Exhausted,
